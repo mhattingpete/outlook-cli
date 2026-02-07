@@ -1,0 +1,27 @@
+[project]
+name = "outlook-cli"
+version = "0.1.0"
+description = "CLI tool for Microsoft Outlook — search/read/send emails, list/read/create calendar events"
+readme = "README.md"
+authors = [
+    { name = "mhattingpete", email = "petersen2630@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "O365>=2.0.37",
+    "typer>=0.15",
+    "rich>=13.0",
+    "tomli-w>=1.0",
+]
+
+[project.scripts]
+outlook = "outlook_cli.main:app"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.8.22,<0.9.0"]
+build-backend = "uv_build"
