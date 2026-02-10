@@ -16,8 +16,10 @@ A command-line tool for Microsoft Outlook (Work/School accounts). Search, read, 
 1. Go to [Azure Portal > App registrations](https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade)
 2. Click **New registration**
 3. Name it anything (e.g. "Outlook CLI"), set **Supported account types** to your preference
-4. Under **Authentication > Platform configurations**, add **Mobile and desktop applications** with the redirect URI `https://login.microsoftonline.com/common/oauth2/nativeclient`
-5. Copy the **Application (client) ID** — you'll need it for `outlook auth login`
+4. Under **Authentication > Advanced settings**, set **Allow public client flows** to **Yes** and save
+5. Under **API permissions**, add the three **Delegated** permissions listed above
+6. If your tenant requires admin consent, have an admin grant consent for the app
+7. Copy the **Application (client) ID** — you'll need it for `outlook auth login`
 
 ## Installation
 

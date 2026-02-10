@@ -7,21 +7,36 @@ import pytest
 from outlook_cli.auth import authenticate, get_account, is_authenticated
 
 
-@patch("outlook_cli.auth._build_account")
-def test_authenticate_success(mock_build):
-    account = MagicMock()
-    account.authenticate.return_value = True
-    mock_build.return_value = account
+@patch("outlook_cli.auth.PublicClientApplication")
+@patch("outlook_cli.auth._get_graph_scopes", return_value=["https://graph.microsoft.com/Mail.ReadWrite"])
+@patch("outlook_cli.auth._token_backend")
+def test_authenticate_success(mock_backend, mock_scopes, mock_msal_cls):
+    msal_app = MagicMock()
+    mock_msal_cls.return_value = msal_app
+    msal_app.initiate_device_flow.return_value = {
+        "user_code": "ABCD-EFGH",
+        "verification_uri": "https://microsoft.com/devicelogin",
+    }
+    msal_app.acquire_token_by_device_flow.return_value = {"access_token": "tok123"}
 
-    assert authenticate("client-id", "tenant-id") is True
-    account.authenticate.assert_called_once_with(scopes=["message_all", "calendar_all"])
+    assert authenticate("client-id", "common") is True
+    msal_app.initiate_device_flow.assert_called_once()
+    mock_backend.return_value.save_token.assert_called_once_with(force=True)
 
 
-@patch("outlook_cli.auth._build_account")
-def test_authenticate_failure(mock_build):
-    account = MagicMock()
-    account.authenticate.return_value = False
-    mock_build.return_value = account
+@patch("outlook_cli.auth.PublicClientApplication")
+@patch("outlook_cli.auth._get_graph_scopes", return_value=["https://graph.microsoft.com/Mail.ReadWrite"])
+@patch("outlook_cli.auth._token_backend")
+def test_authenticate_failure(mock_backend, mock_scopes, mock_msal_cls):
+    msal_app = MagicMock()
+    mock_msal_cls.return_value = msal_app
+    msal_app.initiate_device_flow.return_value = {
+        "user_code": "ABCD-EFGH",
+        "verification_uri": "https://microsoft.com/devicelogin",
+    }
+    msal_app.acquire_token_by_device_flow.return_value = {
+        "error_description": "User cancelled",
+    }
 
     assert authenticate("client-id") is False
 

@@ -39,6 +39,7 @@ Issues = "https://github.com/mhattingpete/outlook-cli/issues"
 [dependency-groups]
 dev = [
     "pytest>=8.0",
+    "python-dotenv>=1.2.1",
 ]
 
 [build-system]

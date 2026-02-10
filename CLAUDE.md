@@ -40,7 +40,7 @@ tests/
 
 ## Architecture
 
-- **Auth flow**: Device code (public client) via O365. Token stored with `FileSystemTokenBackend` in `~/.outlook-cli/`.
+- **Auth flow**: Device code via MSAL `PublicClientApplication`. O365's `FileSystemTokenBackend` is passed as MSAL's `token_cache` so both libraries share the same token. Token stored in `~/.outlook-cli/`.
 - **CLI framework**: Typer with `add_typer()` sub-command groups. Each command module exposes an `app = typer.Typer()`.
 - **Display**: Rich Console for all output. `getattr()` with defaults for safe O365 object access.
 - **Config**: TOML-based (`tomllib` for reading, `tomli-w` for writing).
@@ -63,7 +63,9 @@ Rich output goes to its own Console (not stdout), so CLI integration tests patch
 ## Dependencies
 
 - `O365` — Microsoft Graph API client
+- `msal` — MSAL authentication (device code flow); transitive dep of O365
 - `typer` — CLI framework
 - `rich` — Terminal formatting
 - `tomli-w` — TOML writing
 - `pytest` — Testing (dev)
+- `python-dotenv` — .env loading (dev, used by debug scripts)
