@@ -1,5 +1,7 @@
 """Unit tests for config.py."""
 
+import pytest
+
 from outlook_cli.config import get_config_dir, load_config, save_config
 
 
@@ -26,3 +28,23 @@ def test_save_overwrites(config_dir):
     save_config({"client_id": "new"})
 
     assert load_config()["client_id"] == "new"
+
+
+def test_load_config_exits_on_corrupt_toml(config_dir):
+    """Corrupt TOML file should exit with an error, not crash."""
+    import outlook_cli.config as config_mod
+
+    config_mod.CONFIG_FILE.write_text("not valid [ toml =")
+    with pytest.raises(SystemExit):
+        load_config()
+
+
+def test_save_config_sets_file_permissions(config_dir):
+    """Saved config file should have 0o600 permissions."""
+    import stat
+
+    save_config({"client_id": "test"})
+    import outlook_cli.config as config_mod
+
+    mode = config_mod.CONFIG_FILE.stat().st_mode
+    assert stat.S_IMODE(mode) == 0o600

@@ -2,12 +2,13 @@
 
 import typer
 
+from outlook_cli import __version__
 from outlook_cli.commands import auth_cmd, cal_cmd, mail_cmd
 
 
 def version_callback(value: bool) -> None:
     if value:
-        print("outlook-cli 0.1.0")
+        print(f"outlook-cli {__version__}")
         raise typer.Exit()
 
 

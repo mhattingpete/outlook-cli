@@ -44,7 +44,11 @@ def logout() -> None:
     """Remove stored credentials."""
     token_path = get_config_dir() / f"{TOKEN_FILENAME}.token"
     if token_path.exists():
-        token_path.unlink()
+        try:
+            token_path.unlink()
+        except OSError as exc:
+            print_error(f"Failed to remove token: {exc}")
+            raise typer.Exit(1) from exc
         print_success("Logged out — token removed.")
     else:
         console.print("No token file found; already logged out.")

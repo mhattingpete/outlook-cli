@@ -13,12 +13,20 @@ app = typer.Typer(help="Manage calendar events.")
 
 def _parse_date(value: str) -> datetime:
     """Parse a YYYY-MM-DD date string."""
-    return datetime.strptime(value, "%Y-%m-%d")
+    try:
+        return datetime.strptime(value, "%Y-%m-%d")
+    except ValueError:
+        print_error(f"Invalid date format: {value} (expected YYYY-MM-DD)")
+        raise typer.Exit(1)
 
 
 def _parse_datetime(value: str) -> datetime:
     """Parse a 'YYYY-MM-DD HH:MM' datetime string."""
-    return datetime.strptime(value, "%Y-%m-%d %H:%M")
+    try:
+        return datetime.strptime(value, "%Y-%m-%d %H:%M")
+    except ValueError:
+        print_error(f"Invalid datetime format: {value} (expected YYYY-MM-DD HH:MM)")
+        raise typer.Exit(1)
 
 
 @app.command("list")
@@ -39,6 +47,10 @@ def list_events(
     account = get_account()
     schedule = account.schedule()
     calendar = schedule.get_default_calendar()
+
+    if calendar is None:
+        print_error("Could not access default calendar.")
+        raise typer.Exit(1)
 
     query = calendar.new_query("start").greater_equal(start_dt)
     query.chain("and").on_attribute("end").less_equal(end_dt)
@@ -76,6 +88,10 @@ def read(
     schedule = account.schedule()
     calendar = schedule.get_default_calendar()
 
+    if calendar is None:
+        print_error("Could not access default calendar.")
+        raise typer.Exit(1)
+
     event = calendar.get_event(object_id=event_id)
 
     if not event:
@@ -101,6 +117,10 @@ def create(
     schedule = account.schedule()
     calendar = schedule.get_default_calendar()
 
+    if calendar is None:
+        print_error("Could not access default calendar.")
+        raise typer.Exit(1)
+
     new_event = calendar.new_event()
     new_event.subject = subject
     new_event.start = start_dt
@@ -111,5 +131,8 @@ def create(
     if location:
         new_event.location = location
 
-    new_event.save()
-    print_success(f"Event created: {subject}")
+    if new_event.save():
+        print_success(f"Event created: {subject}")
+    else:
+        print_error("Failed to create event.")
+        raise typer.Exit(1)

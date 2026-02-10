@@ -102,3 +102,52 @@ def test_create_event_with_optional_fields(mock_get, mock_account):
     assert result.exit_code == 0
     assert new_event.body == "Full day workshop"
     assert new_event.location == "Conference Room A"
+
+
+# ── Error handling tests ─────────────────────────────────────
+
+
+@patch("outlook_cli.commands.cal_cmd.get_account")
+def test_list_invalid_start_date(mock_get, mock_account):
+    mock_get.return_value = mock_account
+    result = runner.invoke(app, ["cal", "list", "--start", "not-a-date"])
+    assert result.exit_code != 0
+
+
+@patch("outlook_cli.commands.cal_cmd.get_account")
+def test_create_invalid_datetime(mock_get, mock_account):
+    mock_get.return_value = mock_account
+    result = runner.invoke(app, [
+        "cal", "create",
+        "--subject", "Test",
+        "--start", "bad-date",
+        "--end", "2025-02-08 13:00",
+    ])
+    assert result.exit_code != 0
+
+
+@patch("outlook_cli.commands.cal_cmd.get_account")
+def test_create_event_save_failure(mock_get, mock_account):
+    mock_get.return_value = mock_account
+    calendar = mock_account.schedule().get_default_calendar()
+    new_event = MagicMock()
+    new_event.save.return_value = False
+    calendar.new_event.return_value = new_event
+
+    result = runner.invoke(app, [
+        "cal", "create",
+        "--subject", "Failing",
+        "--start", "2025-02-08 12:00",
+        "--end", "2025-02-08 13:00",
+    ])
+    assert result.exit_code != 0
+
+
+@patch("outlook_cli.commands.cal_cmd.get_account")
+def test_list_null_calendar(mock_get, mock_account):
+    """Should exit when get_default_calendar returns None."""
+    mock_get.return_value = mock_account
+    mock_account.schedule().get_default_calendar.return_value = None
+
+    result = runner.invoke(app, ["cal", "list"])
+    assert result.exit_code != 0

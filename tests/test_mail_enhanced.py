@@ -163,3 +163,58 @@ def test_mark_message_not_found(mock_get):
 
     result = runner.invoke(app, ["mail", "mark", "nonexistent"])
     assert result.exit_code != 0
+
+
+# ── Error handling tests ─────────────────────────────────────
+
+
+@patch("outlook_cli.commands.mail_cmd.get_account")
+def test_search_invalid_start_date(mock_get, mock_account):
+    mock_get.return_value = mock_account
+    result = runner.invoke(app, ["mail", "search", "--start-date", "not-a-date"])
+    assert result.exit_code != 0
+
+
+@patch("outlook_cli.commands.mail_cmd.get_account")
+def test_search_invalid_end_date(mock_get, mock_account):
+    mock_get.return_value = mock_account
+    result = runner.invoke(app, ["mail", "search", "--end-date", "bad"])
+    assert result.exit_code != 0
+
+
+@patch("outlook_cli.commands.mail_cmd.get_account")
+def test_reply_send_failure(mock_get):
+    account = mock_get.return_value
+    mailbox = account.mailbox.return_value
+    msg = MagicMock()
+    reply_msg = MagicMock()
+    reply_msg.send.return_value = False
+    msg.reply.return_value = reply_msg
+    mailbox.get_message.return_value = msg
+
+    result = runner.invoke(app, ["mail", "reply", "msg-123", "--body", "Thanks"])
+    assert result.exit_code != 0
+
+
+@patch("outlook_cli.commands.mail_cmd.get_account")
+def test_mark_read_failure(mock_get):
+    account = mock_get.return_value
+    mailbox = account.mailbox.return_value
+    msg = MagicMock()
+    msg.mark_as_read.return_value = False
+    mailbox.get_message.return_value = msg
+
+    result = runner.invoke(app, ["mail", "mark", "msg-123"])
+    assert result.exit_code != 0
+
+
+@patch("outlook_cli.commands.mail_cmd.get_account")
+def test_mark_unread_failure(mock_get):
+    account = mock_get.return_value
+    mailbox = account.mailbox.return_value
+    msg = MagicMock()
+    msg.mark_as_unread.return_value = False
+    mailbox.get_message.return_value = msg
+
+    result = runner.invoke(app, ["mail", "mark", "msg-123", "--unread"])
+    assert result.exit_code != 0

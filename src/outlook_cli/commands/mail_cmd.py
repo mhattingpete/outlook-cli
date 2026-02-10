@@ -50,13 +50,21 @@ def search(
         first_filter = True
 
         if start_date:
-            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            try:
+                start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            except ValueError:
+                print_error(f"Invalid date format: {start_date} (expected YYYY-MM-DD)")
+                raise typer.Exit(1)
             clause = odata_query.on_attribute("receivedDateTime") if first_filter else odata_query.chain("and").on_attribute("receivedDateTime")
             clause.greater_equal(start_dt)
             first_filter = False
 
         if end_date:
-            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+            try:
+                end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+            except ValueError:
+                print_error(f"Invalid date format: {end_date} (expected YYYY-MM-DD)")
+                raise typer.Exit(1)
             clause = odata_query.on_attribute("receivedDateTime") if first_filter else odata_query.chain("and").on_attribute("receivedDateTime")
             clause.less_equal(end_dt)
             first_filter = False
@@ -149,10 +157,13 @@ def reply(
 
     reply_msg = msg.reply_all() if reply_all else msg.reply()
     reply_msg.body = body
-    reply_msg.send()
 
-    target = "all recipients" if reply_all else str(msg.sender)
-    print_success(f"Reply sent to {target}.")
+    if reply_msg.send():
+        target = "all recipients" if reply_all else str(msg.sender)
+        print_success(f"Reply sent to {target}.")
+    else:
+        print_error("Failed to send reply.")
+        raise typer.Exit(1)
 
 
 @app.command()
@@ -170,8 +181,14 @@ def mark(
         raise typer.Exit(1)
 
     if read_flag:
-        msg.mark_as_read()
-        print_success("Message marked as read.")
+        if msg.mark_as_read():
+            print_success("Message marked as read.")
+        else:
+            print_error("Failed to mark message as read.")
+            raise typer.Exit(1)
     else:
-        msg.mark_as_unread()
-        print_success("Message marked as unread.")
+        if msg.mark_as_unread():
+            print_success("Message marked as unread.")
+        else:
+            print_error("Failed to mark message as unread.")
+            raise typer.Exit(1)

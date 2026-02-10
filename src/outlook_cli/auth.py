@@ -1,7 +1,6 @@
 """O365 authentication with device code flow via MSAL."""
 
-import sys
-
+import typer
 from msal import PublicClientApplication
 from O365 import Account, FileSystemTokenBackend
 
@@ -42,11 +41,15 @@ def authenticate(client_id: str, tenant_id: str = "common") -> bool:
     scopes = _get_graph_scopes(client_id, tenant_id)
     authority = MSAL_AUTHORITY.format(tenant_id=tenant_id)
 
-    app = PublicClientApplication(
-        client_id,
-        authority=authority,
-        token_cache=backend,
-    )
+    try:
+        app = PublicClientApplication(
+            client_id,
+            authority=authority,
+            token_cache=backend,
+        )
+    except Exception as exc:
+        print_error(f"Failed to initialize auth client: {exc}")
+        return False
 
     flow = app.initiate_device_flow(scopes=scopes)
     if "user_code" not in flow:
@@ -59,7 +62,11 @@ def authenticate(client_id: str, tenant_id: str = "common") -> bool:
     result = app.acquire_token_by_device_flow(flow)
 
     if "access_token" in result:
-        backend.save_token(force=True)
+        try:
+            backend.save_token(force=True)
+        except OSError as exc:
+            print_error(f"Token acquired but failed to save: {exc}")
+            return False
         return True
 
     print_error(result.get("error_description", "Authentication failed."))
@@ -73,8 +80,11 @@ def is_authenticated() -> bool:
     if not client_id:
         return False
 
-    account = _build_account(client_id, config.get("tenant_id", "common"))
-    return account.is_authenticated
+    try:
+        account = _build_account(client_id, config.get("tenant_id", "common"))
+        return account.is_authenticated
+    except Exception:
+        return False
 
 
 def get_account() -> Account:
@@ -84,12 +94,16 @@ def get_account() -> Account:
 
     if not client_id:
         print_error("Not configured. Run: outlook auth login --client-id <ID>")
-        sys.exit(1)
+        raise typer.Exit(1)
 
-    account = _build_account(client_id, config.get("tenant_id", "common"))
+    try:
+        account = _build_account(client_id, config.get("tenant_id", "common"))
+    except Exception as exc:
+        print_error(f"Failed to initialize account: {exc}")
+        raise typer.Exit(1) from exc
 
     if not account.is_authenticated:
         print_error("Not authenticated. Run: outlook auth login")
-        sys.exit(1)
+        raise typer.Exit(1)
 
     return account

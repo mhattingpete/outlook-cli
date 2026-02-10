@@ -1,5 +1,6 @@
 """Rich formatting helpers for CLI output."""
 
+import html
 import re
 
 from rich.console import Console
@@ -19,9 +20,7 @@ def _strip_html(text: str) -> str:
     clean = re.sub(r"</p>", "", clean)
     clean = re.sub(r"<[^>]+>", "", clean)
     clean = re.sub(r"&nbsp;", " ", clean)
-    clean = re.sub(r"&amp;", "&", clean)
-    clean = re.sub(r"&lt;", "<", clean)
-    clean = re.sub(r"&gt;", ">", clean)
+    clean = html.unescape(clean)
     return clean.strip()
 
 

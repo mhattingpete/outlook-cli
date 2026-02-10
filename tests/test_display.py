@@ -5,6 +5,7 @@ from io import StringIO
 from rich.console import Console
 
 from outlook_cli import display
+from outlook_cli.display import _looks_like_html, _strip_html
 
 
 def _capture_console():
@@ -66,3 +67,37 @@ def test_print_mail_table_empty():
     display.print_mail_table([])
     output = buf.getvalue()
     assert "Messages" in output
+
+
+# ── _strip_html / _looks_like_html ──────────────────────────
+
+
+def test_strip_html_removes_tags():
+    assert _strip_html("<p>hello</p>") == "hello"
+
+
+def test_strip_html_converts_br():
+    assert "line1\nline2" in _strip_html("line1<br>line2")
+
+
+def test_strip_html_unescapes_entities():
+    assert _strip_html("&amp; &lt; &gt; &quot;") == '& < > "'
+
+
+def test_strip_html_handles_nbsp():
+    assert _strip_html("word&nbsp;word") == "word word"
+
+
+def test_strip_html_handles_numeric_entities():
+    assert _strip_html("&#39;quoted&#39;") == "'quoted'"
+
+
+def test_looks_like_html_true():
+    assert _looks_like_html("<html><body>hi</body></html>") is True
+    assert _looks_like_html("<div>content</div>") is True
+    assert _looks_like_html("<p>paragraph</p>") is True
+
+
+def test_looks_like_html_false():
+    assert _looks_like_html("just plain text") is False
+    assert _looks_like_html("no <tags here") is False
