@@ -2,6 +2,7 @@
 
 from typer.testing import CliRunner
 
+from outlook_cli import __version__
 from outlook_cli.main import app
 
 runner = CliRunner()
@@ -10,7 +11,7 @@ runner = CliRunner()
 def test_version():
     result = runner.invoke(app, ["--version"])
     assert result.exit_code == 0
-    assert "outlook-cli 0.1.0" in result.output
+    assert f"outlook-cli {__version__}" in result.output
 
 
 def test_help():
