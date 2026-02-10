@@ -101,6 +101,44 @@ outlook cal create --subject "Workshop" \
   --body "Full day workshop" --location "Conference Room B"
 ```
 
+## Using with Claude Code
+
+outlook-cli works with [Claude Code](https://docs.anthropic.com/en/docs/claude-code) out of the box. Here are example prompts and what Claude does with them:
+
+```bash
+# ── Email triage ──────────────────────────────────────────
+# Prompt: "Show me unread emails from alice"
+outlook mail search --unread --from alice@company.com
+
+# Prompt: "Read the first message"
+outlook mail read aB3x-def4-5678-gh90
+
+# Prompt: "Reply saying I'll handle it today"
+outlook mail reply aB3x-def4-5678-gh90 --body "I'll handle this today."
+
+# Prompt: "Mark it as read"
+outlook mail mark aB3x-def4-5678-gh90
+
+# ── Calendar management ──────────────────────────────────
+# Prompt: "What's on my calendar this week?"
+outlook cal list
+
+# Prompt: "Any recurring meetings?"
+outlook cal list --recurring
+
+# Prompt: "Schedule a team lunch Friday at noon"
+outlook cal create --subject "Team Lunch" \
+  --start "2025-02-14 12:00" --end "2025-02-14 13:00" \
+  --location "Cafeteria"
+
+# ── Search and respond ───────────────────────────────────
+# Prompt: "Find emails about the project proposal with attachments"
+outlook mail search "project proposal" --has-attachments
+
+# Prompt: "Reply-all to the latest with my feedback"
+outlook mail reply msg-id --reply-all --body "Looks good — approved."
+```
+
 ## Configuration
 
 Config and tokens are stored in `~/.outlook-cli/`:
