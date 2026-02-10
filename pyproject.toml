@@ -1,6 +1,6 @@
 [project]
 name = "outlook-cli"
-version = "0.1.0"
+version = "0.2.0"
 description = "CLI tool for Microsoft Outlook — search/read/send emails, list/read/create calendar events"
 readme = "README.md"
 license = { text = "MIT" }
